@@ -39,6 +39,9 @@ Now, with something this complex we'd just be masochists if we didn't write spec
 This is how Norvig went about the implementation in python and it translates to Ruby quite well. We can write a basic
 failing spec as follows:
 
+`editor spec/ribby_spec.rb`
+
+
 ```ruby
 require 'spec_helper'
 
@@ -58,6 +61,8 @@ end
 
 This will obviously fail, as expected since we haven't written any non-spec code. However, it is not too crazy.
 Now, I know immutability is awesome and stuff. But we're gonna start simple here to fulfill this spec's needs:
+
+`editor lib/ribby.rb`
 
 ```ruby
 module Ribby
@@ -114,6 +119,8 @@ def atom(token):
 `ValueError` is not an exception we have, and if we get no exceptions if we coerce nonsense to numbers. So, let's get
 half of our ass and work around this. But first we should write a test since we know our end-goal.
 
+`editor spec/ribby_spec.rb`
+
 ```ruby
     it 'can create atoms from tokens' do
       expect(Ribby.atom('0')).to eq 0
@@ -124,7 +131,10 @@ half of our ass and work around this. But first we should write a test since we 
 
 I don't generally like multiple expects, but remember, we're working with half an ass here. Now, how to define this?
 
+`editor lib/ribby.rb`
+
 ```ruby
+...
   def atom(token)
     # numbers become numbers. all else becomes a symbol
     begin # start checking for integers
@@ -154,6 +164,7 @@ I don't generally like multiple expects, but remember, we're working with half a
       raise ValueError
     end
   end
+...
 ```
 
 And now, our specs can pass. The alternative here would be monkeypatching the core `Float` and `Integer` classes, but
