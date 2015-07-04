@@ -26,7 +26,7 @@ module Ribby
   # these will later become monkeypatches
   class ValueError < StandardError; end
   def check_zero_int(num)
-    if num == '0' || num == 0
+    if num == '0'
       num.to_i
     else
       raise ValueError
@@ -34,7 +34,7 @@ module Ribby
   end
 
   def check_zero_float(num)
-    if num == '0.0' || num == 0.0
+    if num == '0.0'
       num.to_f
     else
       raise ValueError
