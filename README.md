@@ -39,6 +39,9 @@ Now, with something this complex we'd just be masochists if we didn't write spec
 This is how Norvig went about the implementation in python and it translates to Ruby quite well. We can write a basic
 failing spec as follows:
 
+`editor spec/ribby_spec.rb`
+
+
 ```ruby
 require 'spec_helper'
 
@@ -58,6 +61,8 @@ end
 
 This will obviously fail, as expected since we haven't written any non-spec code. However, it is not too crazy.
 Now, I know immutability is awesome and stuff. But we're gonna start simple here to fulfill this spec's needs:
+
+`editor lib/ribby.rb`
 
 ```ruby
 module Ribby
@@ -80,5 +85,89 @@ Here, we do a few things:
 
 Simple enough!
 
-### To be continued
+### Atoms - Not the Periodic Kind
+![RIP](http://i.imgur.com/vzmFTqX.png)
 
+We are going to embody this principle here. Since we are beginning with an implementation that is largely calculator
+functions, we will need to convert anything that is not a number to a symbol. Now, Python handles this a bit differently
+than Ruby. In Ruby, if we coerce random things to ints or floats, we get...well. Let's see:
+
+```ruby
+2.2.1 :001 > 1.to_f
+ => 1.0 
+2.2.1 :002 > 1.0.to_i
+ => 1 
+2.2.1 :003 > 'i fear weasels'.to_f
+ => 0.0 
+2.2.1 :004 > 'i fear weasels'.to_i
+ => 0 
+```
+
+I will not speak on whether or not I believe this is reasonable in any way. But nonetheless we have to deal with it.
+In Norvig's original piece he wrote this function for atom's:
+
+```python
+def atom(token):
+    "Numbers become numbers; every other token is a symbol."
+    try: return int(token)
+    except ValueError:
+        try: return float(token)
+        except ValueError:
+            return Symbol(token)
+```
+
+`ValueError` is not an exception we have, and if we get no exceptions if we coerce nonsense to numbers. So, let's get
+half of our ass and work around this. But first we should write a test since we know our end-goal.
+
+`editor spec/ribby_spec.rb`
+
+```ruby
+    it 'can create atoms from tokens' do
+      expect(Ribby.atom('0')).to eq 0
+      expect(Ribby.atom('0.0')).to eq 0.0
+      expect(Ribby.atom('f')).to eq :f
+    end
+```
+
+I don't generally like multiple expects, but remember, we're working with half an ass here. Now, how to define this?
+
+`editor lib/ribby.rb`
+
+```ruby
+...
+  def atom(token)
+    # numbers become numbers. all else becomes a symbol
+    begin # start checking for integers
+      check_zero_int(token)
+    rescue ValueError # WOOPS not an int
+      begin
+        check_zero_float(token) # maybe a float?
+      rescue ValueError # NOPE, fuck it lets make a symbol
+        token.to_sym
+      end
+    end
+  end
+
+  class ValueError < StandardError; end # could just raise Exception but this is easy and a tad less horrible
+  def check_zero_int(num)
+    if num == '0' # these first blocks allow us to have 0. This is important in a calculator.
+      num.to_i
+    else
+      raise ValueError
+    end
+  end
+
+  def check_zero_float(num)
+    if num == '0.0' # see above
+      num.to_f
+    else
+      raise ValueError
+    end
+  end
+...
+```
+
+And now, our specs can pass. The alternative here would be monkeypatching the core `Float` and `Integer` classes, but
+I really dont like that idea for something as toy-ish as a LISP calculator.
+
+### To be continued.
